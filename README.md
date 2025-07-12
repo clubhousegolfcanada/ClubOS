@@ -1,14 +1,10 @@
-Here’s a new README.md draft tailored to your current ClubOS V2.0 build — acknowledging your architecture, priorities, and modular design stack.
+ClubOS Mission Control v2.0
+
+command layer for Clubhouse 24/7 Golf — built for autonomous facility infrastructure, not just operations. 
 
 ⸻
 
-🧠 ClubOS Mission Control v2.0
-
-Cognitive command layer for Clubhouse 24/7 Golf — built for autonomous facility infrastructure, not just operations. This is the execution nervous system for tasks, SOPs, ticketing, and LLM routing — with layered control, dry logic, and zero-friction UI.
-
-⸻
-
-⛓️ SYSTEM OVERVIEW
+SYSTEM OVERVIEW
 
 Layer	Description
 ClubCore	Core engine — task parsing, routing, DB logic
@@ -23,7 +19,7 @@ UI Layer	HTML/JS-based Command Center — one-click task injection and monitorin
 
 ⸻
 
-📁 FILE STRUCTURE
+FILE STRUCTURE
 
 .
 ├── backend/
@@ -44,7 +40,7 @@ UI Layer	HTML/JS-based Command Center — one-click task injection and monitorin
 
 ⸻
 
-🧪 API ENDPOINTS
+API ENDPOINTS
 
 Method	Endpoint	Description
 GET	/health	Heartbeat ping for frontend check
@@ -55,7 +51,7 @@ GET	/sop/search	(Planned) Google Drive vector search endpoint
 
 ⸻
 
-⚙️ SETUP
+SETUP
 	1.	Install deps
 
 pip install -r requirements.txt
@@ -71,7 +67,7 @@ Open frontend/index.html in browser (runs entirely client-side, uses API at loca
 
 ⸻
 
-🧠 TECH STACK
+TECH STACK
 
 Component	Use
 FastAPI	Backend + routing
@@ -84,7 +80,7 @@ HTML/JS	Command Console UI
 
 ⸻
 
-🧩 LLM LOGIC LAYERS
+LLM LOGIC LAYERS
 
 Each processed request can trigger any or all of these:
 	1.	CapabilityFrontier: Should the LLM even handle this?
@@ -95,7 +91,7 @@ Each processed request can trigger any or all of these:
 
 ⸻
 
-🧰 COMMAND CENTER
+ COMMAND CENTER
 
 In the frontend UI, available commands:
 
@@ -109,13 +105,10 @@ Toggle flags: simulate, escalate, generate ticket, use LLM, Drive search.
 
 ⸻
 
-🧱 TO ADD NEXT
-	•	✅ Google Drive vector index
-	•	✅ Auth + role logic
-	•	⏳ Inline document preview on SOP search
-	•	⏳ Mobile-friendly dashboard
-	•	⏳ Auto-escalation to external ticket systems (e.g. Linear)
+ TO ADD NEXT
+	•	 Google Drive vector index
+	•	 Auth + role logic
+	•	 Inline document preview on SOP search
+	•	 Mobile-friendly dashboard
+	•	Auto-escalation to email/sms
 
-⸻
-
-Let me know if you want a docs/ folder scaffold for dev handoff, or Dockerfile to encapsulate this whole stack.
