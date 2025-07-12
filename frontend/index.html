@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClubOS Mission Control</title>
+    <title>ClubOS Control Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* Core Variables */
@@ -695,19 +695,19 @@
         class ArchitectureComponent extends Component {
             render() {
                 const modules = [
-                    { name: 'ClubOS', desc: 'Master system & UI interface - The full nervous system' },
-                    { name: 'ClubCore', desc: 'Backend engine - Central brain routing logic' },
-                    { name: 'ClubOps', desc: 'Procedural logic - Muscle memory for routine tasks' },
-                    { name: 'SignalOS', desc: 'Strategic engine - Prefrontal cortex for planning' },
+                    { name: 'ClubOS', desc: 'Master system & UI interface' },
+                    { name: 'ClubCore', desc: 'Backend engine - Routing logic' },
+                    { name: 'ClubOps', desc: 'Procedural logic - Routine tasks' },
+                    { name: 'SignalOS', desc: 'Strategic engine - Planning' },
                     { name: 'Clubhost', desc: 'Voice enforcement - Personality filter' },
-                    { name: 'CapabilityFrontier', desc: 'Guardrail layer - Pain reflex for boundaries' },
+                    { name: 'CapabilityFrontier', desc: 'Guardrail layer' },
                     { name: 'Ticket Engine', desc: 'Post-processing - Reflex output & logging' },
                     { name: 'Google Drive', desc: 'Document search & retrieval integration' }
                 ];
 
                 this.element.innerHTML = `
                     <div class="card" style="margin-bottom: 2rem;">
-                        <div class="card-header text-accent">SYSTEM ARCHITECTURE - NERVOUS SYSTEM ANALOGY</div>
+                        <div class="card-header text-accent">SYSTEM ARCHITECTURE</div>
                         <div class="grid grid-auto">
                             ${modules.map(module => `
                                 <div class="card card-hover" style="background: var(--bg-primary);">
