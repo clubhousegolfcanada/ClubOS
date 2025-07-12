@@ -3,9 +3,7 @@ from bootstrap import validate_env
 load_dotenv()
 validate_env()
 
-# Then change the engine import:
-# from engine import OperationalEngine
-from engine_foundation import OperationalEngine
+from engine_foundation import OperationalEngine  # Fixed import
 from fastapi import FastAPI, HTTPException
 from health import router as health_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,12 +14,10 @@ import openai
 import os
 
 from database import SessionLocal, Equipment, Procedure, IncidentLog
-from engine import OperationalEngine
 
 app = FastAPI(title="ClubOS", version="2.0")
 
 app.include_router(health_router)
-
 
 # CORS
 app.add_middleware(
