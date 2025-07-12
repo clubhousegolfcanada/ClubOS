@@ -363,3 +363,20 @@ async def analytics_summary():
         }
     finally:
         db.close()
+# Add these imports to your existing main.py
+from backend.routes.process import router as process_router
+
+# In your existing main.py, update the route registration section:
+# (Add this where you register other routers)
+app.include_router(process_router, prefix="/api", tags=["process"])
+
+# Also ensure you have these middleware configurations:
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
