@@ -1,6 +1,7 @@
 # backend/core/prompt.py
 from typing import Dict, Any
 import json
+from backend.core.clubhost_tone import ClubhostTone
 
 class PromptBuilder:
     @staticmethod
@@ -86,4 +87,6 @@ Based on this information:
 
 Provide your analysis and recommendations in the required JSON format."""
         
-        return prompt
+        # Apply Clubhouse tone based on operation type
+        tone_style = "technical" if operation in ["equipment", "facilities"] else "default"
+        return ClubhostTone.wrap_prompt(prompt, style=tone_style)
