@@ -10,6 +10,7 @@ from backend.core.prompt import PromptBuilder
 from backend.core.llm import llm_service
 from backend.core.validator import ResponseValidator
 from backend.core.fallback import FallbackService
+from backend.core.clubhost_tone import ClubhostTone
 from backend.database import get_db, SessionLocal
 from backend.ticket_system import TicketSystem, NotificationService
 
@@ -63,6 +64,10 @@ async def process_task(request: ProcessRequest) -> ProcessResponse:
                 
                 if validated_response:
                     logger.info(f"Successfully processed task {request_id} via LLM")
+                    # Apply Clubhouse tone to recommendations
+                    validated_response.recommendation = ClubhostTone.format_recommendation(
+                        [rec.dict() for rec in validated_response.recommendation]
+                    )
                     response = validated_response
                 else:
                     logger.warning(f"LLM validation failed for request {request_id}, using fallback")
@@ -99,6 +104,14 @@ async def process_task(request: ProcessRequest) -> ProcessResponse:
         # Handle ticket generation if requested and ticket exists in response
         if request.toggles.get("generate_ticket", True) and response.ticket:
             try:
+                # Apply Clubhouse tone to ticket
+                formatted_ticket = ClubhostTone.format_for_ticket(
+                    response.ticket.title,
+                    response.ticket.description
+                )
+                response.ticket.title = formatted_ticket["title"]
+                response.ticket.description = formatted_ticket["description"]
+                
                 db = SessionLocal()
                 ticket = ticket_system.create_ticket(
                     db=db,
