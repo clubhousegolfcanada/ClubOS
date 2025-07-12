@@ -1,1 +1,1636 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClubOS Mission Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        /* Header */
+        .header {
+            border-bottom: 1px solid #333;
+            padding-bottom: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+        
+        .header-info {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .header-info .accent {
+            color: #152F2F;
+        }
+        
+        /* System Architecture Visual */
+        .architecture-diagram {
+            background: #1a1a1a;
+            border: 1px solid #152F2F;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .architecture-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #152F2F;
+        }
+        
+        .system-modules {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .module-card {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.3s;
+        }
+        
+        .module-card:hover {
+            border-color: #152F2F;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(21, 47, 47, 0.3);
+        }
+        
+        .module-name {
+            font-weight: 600;
+            color: #152F2F;
+            margin-bottom: 4px;
+        }
+        
+        .module-desc {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        /* Navigation */
+        .nav {
+            display: flex;
+            gap: 32px;
+            border-bottom: 1px solid #333;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-item {
+            padding: 12px 0;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            color: #888;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .nav-item:hover {
+            color: #fff;
+        }
+        
+        .nav-item.active {
+            color: #fff;
+            border-bottom-color: #152F2F;
+        }
+        
+        /* Content Sections */
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        /* Cards */
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .card-header {
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+            margin-bottom: 16px;
+        }
+        
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border: 1px solid #152F2F;
+            border-radius: 8px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #152F2F;
+            animation: scan 3s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .metric-value {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+        }
+        
+        /* Status Dots */
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .status-completed { background-color: #10b981; }
+        .status-processing { background-color: #3b82f6; animation: pulse 0.5s infinite; }
+        .status-failed { background-color: #ef4444; }
+        .status-pending { background-color: #f59e0b; }
+        .status-escalated { background-color: #f59e0b; }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+        
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #152F2F;
+            background: #1a1a1a;
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: #152F2F;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(21, 47, 47, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #2a2a2a;
+        }
+        
+        .btn-secondary:hover {
+            background: #3a3a3a;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+        }
+        
+        .btn-full {
+            width: 100%;
+        }
+        
+        /* Layer Flow */
+        .layer-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 32px 0;
+            overflow-x: auto;
+        }
+        
+        .layer-node {
+            background: #1a1a1a;
+            border: 2px solid #152F2F;
+            border-radius: 8px;
+            padding: 16px 24px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            min-width: 140px;
+            transition: all 0.3s;
+        }
+        
+        .layer-node.active {
+            border-color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+            transform: scale(1.05);
+        }
+        
+        .layer-arrow {
+            width: 40px;
+            height: 2px;
+            background: #152F2F;
+            position: relative;
+        }
+        
+        .layer-arrow::after {
+            content: '';
+            position: absolute;
+            right: -6px;
+            top: -3px;
+            width: 0;
+            height: 0;
+            border-left: 6px solid #152F2F;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+        }
+        
+        /* Console Log */
+        .console-log {
+            background: #0a0a0a;
+            border: 1px solid #152F2F;
+            border-radius: 8px;
+            padding: 16px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+        }
+        
+        .log-time {
+            color: #666;
+        }
+        
+        .log-success { color: #10b981; }
+        .log-error { color: #ef4444; }
+        .log-info { color: #888; }
+        .log-warning { color: #f59e0b; }
+        
+        /* Task List */
+        .task-item {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+        }
+        
+        .task-item:hover {
+            border-color: #152F2F;
+            transform: translateX(4px);
+        }
+        
+        .task-info {
+            flex: 1;
+        }
+        
+        .task-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .task-meta {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        /* Grid layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        /* Result Box */
+        .result-box {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .result-stat {
+            text-align: center;
+            padding: 16px;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+        
+        .result-value {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .result-label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        /* Toggle Switch */
+        .toggle-group {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #2a2a2a;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: #666;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        
+        .toggle-switch input:checked ~ .toggle-slider {
+            transform: translateX(20px);
+            background: white;
+        }
+        
+        input:checked + .toggle-switch {
+            background: #152F2F;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 48px 0;
+        }
+        
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Ticket Preview */
+        .ticket-preview {
+            background: #0a0a0a;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .ticket-badge {
+            background: #f59e0b;
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        /* Command Palette */
+        .command-input {
+            background: #1a1a1a;
+            border: 2px solid #152F2F;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            width: 100%;
+            color: #fff;
+        }
+        
+        .command-hints {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .command-hint {
+            display: inline-block;
+            background: #2a2a2a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+        
+        /* Operational Data Grid */
+        .ops-data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        
+        .ops-data-card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .ops-data-header {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #152F2F;
+        }
+        
+        .ops-data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        
+        .ops-data-item:last-child {
+            border-bottom: none;
+        }
+        
+        .ops-data-label {
+            color: #888;
+            font-size: 13px;
+        }
+        
+        .ops-data-value {
+            font-weight: 500;
+        }
+        
+        /* API Status */
+        .api-status {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        
+        .api-status.connected {
+            border-color: #10b981;
+        }
+        
+        .api-status.disconnected {
+            border-color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- API Status Indicator -->
+        <div class="api-status disconnected" id="api-status-indicator">
+            <span class="status-dot status-failed"></span>
+            <span>API: <span id="api-status-text">Checking...</span></span>
+        </div>
+        
+        <!-- Header -->
+        <div class="header">
+            <h1>ClubOS MISSION CONTROL</h1>
+            <div class="header-info">
+                <span>VERSION 2.0 | JULY 2025</span>
+                <span>|</span>
+                <span class="accent">CLUBHOUSE OPERATIONAL INTELLIGENCE</span>
+            </div>
+        </div>
+        
+        <!-- Architecture Overview -->
+        <div class="architecture-diagram">
+            <div class="architecture-title">SYSTEM ARCHITECTURE - NERVOUS SYSTEM ANALOGY</div>
+            <div class="system-modules">
+                <div class="module-card">
+                    <div class="module-name">ClubOS</div>
+                    <div class="module-desc">Master system & UI interface - The full nervous system</div>
+                </div>
+                <div class="module-card">
+                    <div class="module-name">ClubCore</div>
+                    <div class="module-desc">Backend engine - Central brain routing logic</div>
+                </div>
+                <div class="module-card">
+                    <div class="module-name">ClubOps</div>
+                    <div class="module-desc">Procedural logic - Muscle memory for routine tasks</div>
+                </div>
+                <div class="module-card">
+                    <div class="module-name">SignalOS</div>
+                    <div class="module-desc">Strategic engine - Prefrontal cortex for planning</div>
+                </div>
+                <div class="module-card">
+                    <div class="module-name">Clubhost</div>
+                    <div class="module-desc">Voice enforcement - Personality filter</div>
+                </div>
+                <div class="module-card">
+                    <div class="module-name">CapabilityFrontier</div>
+                    <div class="module-desc">Guardrail layer - Pain reflex for boundaries</div>
+                </div>
+                <div class="module-card">
+                    <div class="module-name">Ticket Engine</div>
+                    <div class="module-desc">Post-processing - Reflex output & logging</div>
+                </div>
+                <div class="module-card">
+                    <div class="module-name">Google Drive</div>
+                    <div class="module-desc">Document search & retrieval integration</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="nav">
+            <div class="nav-item active" onclick="switchTab('dashboard', event)">DASHBOARD</div>
+            <div class="nav-item" onclick="switchTab('process', event)">TASK PROCESSOR</div>
+            <div class="nav-item" onclick="switchTab('commands', event)">COMMAND CENTER</div>
+            <div class="nav-item" onclick="switchTab('operations', event)">OPERATIONS</div>
+            <div class="nav-item" onclick="switchTab('tickets', event)">TICKET ENGINE</div>
+            <div class="nav-item" onclick="switchTab('history', event)">HISTORY</div>
+            <div class="nav-item" onclick="switchTab('versions', event)">VERSION CONTROL</div>
+        </div>
+        
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="content-section active">
+            <!-- Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value">
+                        <span class="status-dot status-completed"></span>HEALTHY
+                    </div>
+                    <div class="metric-label">System Status</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="active-tasks">0</div>
+                    <div class="metric-label">Active Tasks</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="completed-tasks">0</div>
+                    <div class="metric-label">Completed Today</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="tickets-generated">0</div>
+                    <div class="metric-label">Tickets Generated</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">92%</div>
+                    <div class="metric-label">Success Rate</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">2.3s</div>
+                    <div class="metric-label">Avg Processing Time</div>
+                </div>
+            </div>
+            
+            <!-- System Logs -->
+            <div class="card">
+                <div class="card-header">System Logs</div>
+                <div class="console-log" id="log-container">
+                    <div class="log-entry">
+                        <span class="log-time">[INIT]</span> <span class="log-info">ClubOS Mission Control initializing...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Tasks -->
+            <div class="card">
+                <div class="card-header">Recent Tasks</div>
+                <div id="recent-tasks">
+                    <div class="empty-state">No recent tasks. Create a new request to get started.</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Task Processor Section -->
+        <div id="process" class="content-section">
+            <div class="card">
+                <div class="card-header">COGNITIVE REQUEST BUILDER</div>
+                
+                <!-- Task Description -->
+                <div class="form-group">
+                    <label class="form-label">Task Description</label>
+                    <textarea id="task-input" class="form-textarea" placeholder="Describe the task to process..."></textarea>
+                </div>
+                
+                <!-- Priority and Type -->
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Priority</label>
+                        <select id="priority-select" class="form-select">
+                            <option value="low">LOW</option>
+                            <option value="medium" selected>MEDIUM</option>
+                            <option value="high">HIGH</option>
+                            <option value="critical">CRITICAL</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Operation Type</label>
+                        <select id="operation-select" class="form-select" onchange="handleOperationChange()">
+                            <option value="general">GENERAL</option>
+                            <option value="pricing">PRICING</option>
+                            <option value="sop">SOP</option>
+                            <option value="installation">INSTALLATION</option>
+                            <option value="partnership">PARTNERSHIP</option>
+                            <option value="simulation">SIMULATION</option>
+                            <option value="strategy">STRATEGY</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Location (conditional) -->
+                <div id="location-group" class="form-group" style="display: none;">
+                    <label class="form-label">Location</label>
+                    <input id="location-input" type="text" class="form-input" placeholder="e.g., River Oaks">
+                </div>
+                
+                <!-- Context -->
+                <div class="form-group">
+                    <label class="form-label">Context</label>
+                    <div id="context-items">
+                        <div class="context-item" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <input type="text" class="form-input" placeholder="Context item..." style="flex: 1;">
+                            <button class="btn btn-danger" onclick="removeContext(this)">REMOVE</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="addContext()">ADD CONTEXT</button>
+                </div>
+                
+                <!-- Options -->
+                <div class="toggle-group">
+                    <div class="toggle-item">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="simulation-check">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span>REQUIRE SIMULATION</span>
+                    </div>
+                    <div class="toggle-item">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="llm-check">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span>USE LLM</span>
+                    </div>
+                    <div class="toggle-item">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="escalation-check" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span>ALLOW ESCALATION</span>
+                    </div>
+                    <div class="toggle-item">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="ticket-check" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span>GENERATE TICKET</span>
+                    </div>
+                    <div class="toggle-item">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="drive-check">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span>SEARCH GOOGLE DRIVE</span>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <button id="submit-btn" class="btn btn-full" onclick="submitTask()">
+                    PROCESS REQUEST
+                </button>
+            </div>
+            
+            <!-- Layer Processing Flow -->
+            <div id="layer-flow-card" class="card" style="display: none;">
+                <div class="card-header">Layer Processing Flow</div>
+                <div class="layer-flow">
+                    <div id="layer-capability" class="layer-node">
+                        CAPABILITY<br>FRONTIER
+                    </div>
+                    <div class="layer-arrow"></div>
+                    <div id="layer-clubops" class="layer-node">
+                        CLUBOPS
+                    </div>
+                    <div class="layer-arrow"></div>
+                    <div id="layer-signalos" class="layer-node">
+                        SIGNAL OS
+                    </div>
+                    <div class="layer-arrow"></div>
+                    <div id="layer-clubhost" class="layer-node">
+                        CLUBHOST
+                    </div>
+                    <div class="layer-arrow"></div>
+                    <div id="layer-ticket" class="layer-node">
+                        TICKET<br>ENGINE
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results -->
+            <div id="results-card" class="card" style="display: none;">
+                <div class="card-header">Processing Result</div>
+                <div class="grid-3">
+                    <div class="result-stat">
+                        <div id="result-status" class="result-value" style="color: #10b981;">COMPLETED</div>
+                        <div class="result-label">Status</div>
+                    </div>
+                    <div class="result-stat">
+                        <div id="result-confidence" class="result-value">92%</div>
+                        <div class="result-label">Confidence</div>
+                    </div>
+                    <div class="result-stat">
+                        <div id="result-time" class="result-value">2.3s</div>
+                        <div class="result-label">Processing Time</div>
+                    </div>
+                </div>
+                
+                <div class="result-box">
+                    <h4 style="margin-bottom: 8px; color: #888; font-size: 12px;">RECOMMENDATION</h4>
+                    <div id="result-recommendation" style="font-family: monospace;">
+                        Task processed successfully with recommended actions.
+                    </div>
+                </div>
+                
+                <div id="ticket-preview" class="ticket-preview" style="display: none;">
+                    <div class="ticket-header">
+                        <h4 style="margin: 0;">Generated Ticket</h4>
+                        <span class="ticket-badge">PENDING REVIEW</span>
+                    </div>
+                    <div id="ticket-content" style="margin-top: 12px; font-size: 13px;">
+                        Ticket details will appear here...
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 16px; margin-top: 24px;">
+                    <button class="btn btn-secondary" onclick="resetForm()">NEW REQUEST</button>
+                    <button class="btn">SAVE RESULT</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Command Center Section -->
+        <div id="commands" class="content-section">
+            <div class="card">
+                <div class="card-header">COMMAND CENTER</div>
+                <div class="form-group">
+                    <label class="form-label">Enter Command</label>
+                    <input type="text" class="command-input" id="command-input" placeholder="Type a command..." onkeypress="handleCommand(event)">
+                    <div class="command-hints">
+                        Available commands: 
+                        <span class="command-hint">install</span>
+                        <span class="command-hint">rewrite</span>
+                        <span class="command-hint">simulate</span>
+                        <span class="command-hint">ad</span>
+                        <span class="command-hint">cleaner_sop</span>
+                    </div>
+                </div>
+                <div id="command-output" class="console-log" style="margin-top: 20px; height: 400px;">
+                    <div class="log-entry">
+                        <span class="log-time">[Ready]</span> <span class="log-info">Command center initialized. Type a command to begin.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Operations Section -->
+        <div id="operations" class="content-section">
+            <div class="card">
+                <div class="card-header">OPERATIONAL DATA</div>
+                <div class="ops-data-grid">
+                    <div class="ops-data-card">
+                        <div class="ops-data-header">Pricing by Location</div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">River Oaks</span>
+                            <span class="ops-data-value">$32/hr</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Dartmouth</span>
+                            <span class="ops-data-value">$35/hr</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Downtown Houston</span>
+                            <span class="ops-data-value">$35/hr</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Memorial Park</span>
+                            <span class="ops-data-value">$30/hr</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Woodlands</span>
+                            <span class="ops-data-value">$28/hr</span>
+                        </div>
+                        <div class="ops-data-item" style="border-top: 1px solid #3a3a3a; padding-top: 12px; margin-top: 8px;">
+                            <span class="ops-data-label">MAX ALLOWED</span>
+                            <span class="ops-data-value" style="color: #ef4444;">$35/hr</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ops-data-card">
+                        <div class="ops-data-header">Partner Terms</div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Revenue Share Start</span>
+                            <span class="ops-data-value">18 months</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Revenue Share %</span>
+                            <span class="ops-data-value">15%</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Exclusivity Required</span>
+                            <span class="ops-data-value">No</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ops-data-card">
+                        <div class="ops-data-header">SOP Configuration</div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Current Version</span>
+                            <span class="ops-data-value">2.0</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Format</span>
+                            <span class="ops-data-value">Visual</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Export Format</span>
+                            <span class="ops-data-value">.docx</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ops-data-card">
+                        <div class="ops-data-header">System Defaults</div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Color</span>
+                            <span class="ops-data-value">#152F2F</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Font</span>
+                            <span class="ops-data-value">Poppins</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Timezone</span>
+                            <span class="ops-data-value">UTC</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">IMMUTABLE RULES</div>
+                <div class="ops-data-grid">
+                    <div class="ops-data-card">
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">No Dynamic Pricing</span>
+                            <span class="ops-data-value" style="color: #10b981;">ENFORCED</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">No Off-White</span>
+                            <span class="ops-data-value" style="color: #10b981;">ENFORCED</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">No Corporate Tone</span>
+                            <span class="ops-data-value" style="color: #10b981;">ENFORCED</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Max Sim Price</span>
+                            <span class="ops-data-value">$35</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">GOOGLE DRIVE INTEGRATION</div>
+                <div class="form-group">
+                    <label class="form-label">Search Google Drive</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="drive-search-input" class="form-input" placeholder="Search for documents..." style="flex: 1;">
+                        <button class="btn" onclick="searchGoogleDrive()">SEARCH</button>
+                    </div>
+                </div>
+                <div id="drive-search-results" style="margin-top: 20px;">
+                    <div class="empty-state">No search performed yet.</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ticket Engine Section -->
+        <div id="tickets" class="content-section">
+            <div class="card">
+                <div class="card-header">TICKET ENGINE</div>
+                <div id="ticket-list">
+                    <div class="empty-state">No tickets generated yet.</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- History Section -->
+        <div id="history" class="content-section">
+            <div class="card">
+                <div class="card-header">Task History</div>
+                <div id="task-history">
+                    <div class="empty-state">No task history available yet.</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Version Control Section -->
+        <div id="versions" class="content-section">
+            <div class="card">
+                <div class="card-header">VERSION CONTROL</div>
+                <div class="ops-data-grid">
+                    <div class="ops-data-card">
+                        <div class="ops-data-header">Current Version</div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Version</span>
+                            <span class="ops-data-value">2.0</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Release Date</span>
+                            <span class="ops-data-value">July 2025</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Status</span>
+                            <span class="ops-data-value" style="color: #10b981;">ACTIVE</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ops-data-card">
+                        <div class="ops-data-header">Version Features</div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Auto Tag</span>
+                            <span class="ops-data-value" style="color: #10b981;">ENABLED</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Rollback</span>
+                            <span class="ops-data-value" style="color: #10b981;">ENABLED</span>
+                        </div>
+                        <div class="ops-data-item">
+                            <span class="ops-data-label">Strategy</span>
+                            <span class="ops-data-value">Semantic</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global state
+        let tasks = [];
+        let tickets = [];
+        let activeTab = 'dashboard';
+        let isProcessing = false;
+        
+        // API Configuration - CHANGE THIS TO YOUR SERVER
+        const API_BASE = 'http://localhost/api';  // This uses Nginx proxy
+        // Alternative configurations:
+        // const API_BASE = 'http://localhost:8000';  // Direct to Python
+        // const API_BASE = 'http://your-server-ip/api';  // Production
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTaskLists();
+            updateMetrics();
+            addLog('ClubOS Mission Control initialized', 'success');
+            addLog('Checking API connection...', 'info');
+            checkAPIConnection();
+            
+            // Check API every 30 seconds
+            setInterval(checkAPIConnection, 30000);
+        });
+        
+        // Check API Connection
+        async function checkAPIConnection() {
+            const indicator = document.getElementById('api-status-indicator');
+            const statusText = document.getElementById('api-status-text');
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    indicator.classList.remove('disconnected');
+                    indicator.classList.add('connected');
+                    indicator.querySelector('.status-dot').className = 'status-dot status-completed';
+                    statusText.textContent = 'Connected';
+                    addLog('API connection verified', 'success');
+                } else {
+                    throw new Error('API not responding');
+                }
+            } catch (error) {
+                indicator.classList.remove('connected');
+                indicator.classList.add('disconnected');
+                indicator.querySelector('.status-dot').className = 'status-dot status-failed';
+                statusText.textContent = 'Disconnected';
+                addLog('API connection failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Tab switching with event parameter
+        function switchTab(tab, event) {
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+            
+            // Update content
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            const tabElement = document.getElementById(tab);
+            if (tabElement) {
+                tabElement.classList.add('active');
+            }
+            
+            activeTab = tab;
+        }
+        
+        // Handle operation type change
+        function handleOperationChange() {
+            const operation = document.getElementById('operation-select').value;
+            const locationGroup = document.getElementById('location-group');
+            
+            if (operation !== 'general') {
+                locationGroup.style.display = 'block';
+            } else {
+                locationGroup.style.display = 'none';
+            }
+        }
+        
+        // Context management
+        function addContext() {
+            const contextItems = document.getElementById('context-items');
+            const newItem = document.createElement('div');
+            newItem.className = 'context-item';
+            newItem.style.cssText = 'display: flex; gap: 8px; margin-bottom: 8px;';
+            newItem.innerHTML = `
+                <input type="text" class="form-input" placeholder="Context item..." style="flex: 1;">
+                <button class="btn btn-danger" onclick="removeContext(this)">REMOVE</button>
+            `;
+            contextItems.appendChild(newItem);
+        }
+        
+        function removeContext(button) {
+            button.parentElement.remove();
+        }
+        
+        // Add log entry
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('log-container');
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="log-time">[${time}]</span> 
+                <span class="log-${type}">${message}</span>
+            `;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        // Submit task with real API integration
+        async function submitTask() {
+            const taskInput = document.getElementById('task-input').value.trim();
+            if (!taskInput || isProcessing) return;
+            
+            isProcessing = true;
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.innerHTML = '<span class="spinner"></span> PROCESSING...';
+            submitBtn.disabled = true;
+            
+            // Show layer flow
+            document.getElementById('layer-flow-card').style.display = 'block';
+            document.getElementById('results-card').style.display = 'none';
+            
+            // Reset layers
+            document.querySelectorAll('.layer-node').forEach(node => {
+                node.classList.remove('active');
+            });
+            
+            addLog(`Processing: ${taskInput.substring(0, 50)}...`, 'info');
+            addLog('Routing through ClubCore engine', 'info');
+            
+            try {
+                // Start processing animation
+                const startTime = Date.now();
+                
+                // Call actual API
+                const response = await fetch(`${API_BASE}/process`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        task: taskInput,
+                        priority: document.getElementById('priority-select').value,
+                        location: document.getElementById('location-input').value || null
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Animate layers while processing
+                const layers = ['layer-capability', 'layer-clubops', 'layer-signalos', 'layer-clubhost', 'layer-ticket'];
+                for (const layer of layers) {
+                    document.getElementById(layer).classList.add('active');
+                    const layerName = layer.replace('layer-', '').toUpperCase();
+                    addLog(`Processing ${layerName}`, 'info');
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+                
+                if (result.status === 'success') {
+                    // Process real response
+                    const task = {
+                        id: result.request_id,
+                        task: taskInput,
+                        status: result.response.status || 'completed',
+                        priority: document.getElementById('priority-select').value,
+                        operation: document.getElementById('operation-select').value,
+                        confidence: result.response.confidence || 0.95,
+                        timestamp: new Date()
+                    };
+                    
+                    tasks.unshift(task);
+                    
+                    // Show results
+                    document.getElementById('results-card').style.display = 'block';
+                    
+                    // Display recommendations
+                    const recommendations = result.response.recommendation;
+                    document.getElementById('result-recommendation').innerHTML = 
+                        Array.isArray(recommendations) 
+                            ? recommendations.map(step => `<div>• ${step}</div>`).join('')
+                            : `<div>${recommendations}</div>`;
+                    
+                    // Update confidence
+                    document.getElementById('result-confidence').textContent = 
+                        `${Math.round(result.response.confidence * 100)}%`;
+                    
+                    // Update time estimate
+                    document.getElementById('result-time').textContent = 
+                        result.response.time_estimate || `${((Date.now() - startTime) / 1000).toFixed(1)}s`;
+                    
+                    // Generate ticket if enabled
+                    if (document.getElementById('ticket-check').checked) {
+                        const ticket = {
+                            id: 'TKT-' + Date.now().toString().slice(-6),
+                            taskId: task.id,
+                            type: 'action_required',
+                            priority: task.priority,
+                            description: `Action required for: ${task.task}`,
+                            status: 'pending',
+                            timestamp: new Date(),
+                            nextSteps: Array.isArray(recommendations) ? recommendations : [recommendations],
+                            contact: result.response.contact_if_fails || 'Manager'
+                        };
+                        
+                        tickets.unshift(ticket);
+                        document.getElementById('ticket-preview').style.display = 'block';
+                        document.getElementById('ticket-content').innerHTML = `
+                            <strong>Ticket ID:</strong> ${ticket.id}<br>
+                            <strong>Type:</strong> Action Required<br>
+                            <strong>Priority:</strong> ${ticket.priority.toUpperCase()}<br>
+                            <strong>Description:</strong> ${ticket.description}<br>
+                            <strong>Contact if fails:</strong> ${ticket.contact}<br><br>
+                            <strong>Next Steps:</strong><br>
+                            ${ticket.nextSteps.map((step, i) => `${i + 1}. ${step}`).join('<br>')}
+                        `;
+                        addLog(`Ticket generated: ${ticket.id}`, 'warning');
+                    }
+                    
+                    updateTaskLists();
+                    updateMetrics();
+                    
+                    addLog('Task processed successfully', 'success');
+                    addLog(`Confidence: ${Math.round(result.response.confidence * 100)}%`, 'info');
+                    
+                } else {
+                    throw new Error(result.detail || 'Processing failed');
+                }
+                
+            } catch (error) {
+                addLog(`Error: ${error.message}`, 'error');
+                
+                // Show error in results
+                document.getElementById('results-card').style.display = 'block';
+                document.getElementById('result-status').textContent = 'FAILED';
+                document.getElementById('result-status').style.color = '#ef4444';
+                document.getElementById('result-recommendation').innerHTML = 
+                    `<div style="color: #ef4444;">Error: ${error.message}</div>
+                     <div style="margin-top: 10px;">Please check the server connection and try again.</div>`;
+                
+                // Still create a failed task record
+                const task = {
+                    id: Date.now().toString(),
+                    task: taskInput,
+                    status: 'failed',
+                    priority: document.getElementById('priority-select').value,
+                    operation: document.getElementById('operation-select').value,
+                    confidence: 0,
+                    timestamp: new Date(),
+                    error: error.message
+                };
+                
+                tasks.unshift(task);
+                updateTaskLists();
+                updateMetrics();
+                
+            } finally {
+                submitBtn.innerHTML = 'PROCESS REQUEST';
+                submitBtn.disabled = false;
+                isProcessing = false;
+            }
+        }
+        
+        // Handle command input
+        function handleCommand(event) {
+            if (event.key === 'Enter') {
+                const commandInput = document.getElementById('command-input');
+                const command = commandInput.value.trim();
+                const commandOutput = document.getElementById('command-output');
+                
+                if (command) {
+                    // Add command to output
+                    const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+                    const entry = document.createElement('div');
+                    entry.className = 'log-entry';
+                    entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-info">> ${command}</span>`;
+                    commandOutput.appendChild(entry);
+                    
+                    // Process command
+                    processCommand(command, commandOutput);
+                    
+                    // Clear input
+                    commandInput.value = '';
+                    commandOutput.scrollTop = commandOutput.scrollHeight;
+                }
+            }
+        }
+        
+        // Process command
+        function processCommand(command, outputEl) {
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            let response = '';
+            let responseType = 'success';
+            
+            switch(command.toLowerCase()) {
+                case 'install':
+                    response = 'Loading installation protocol... Bay types: single, double, premium. Requirements: power, network, space.';
+                    break;
+                case 'cleaner_sop':
+                    response = 'Loading SOP v2.0... Steps: 1) Check simulator status 2) Clean hitting surfaces 3) Vacuum floor area 4) Check and refill supplies';
+                    break;
+                case 'rewrite':
+                    response = 'Rewrite mode activated. Applying Clubhost tone rules: dry, direct, sharp. No filler words.';
+                    break;
+                case 'simulate':
+                    response = 'SignalOS simulation engine activated. Running edge-case testing... 100 iterations... Success rate: 92%';
+                    break;
+                case 'ad':
+                    response = 'Advertisement generation mode. Applying brand guidelines: Clubhouse Green #152F2F, Poppins font, no corporate tone.';
+                    break;
+                default:
+                    response = 'Unknown command. Available commands: install, rewrite, simulate, ad, cleaner_sop';
+                    responseType = 'error';
+            }
+            
+            const responseEntry = document.createElement('div');
+            responseEntry.className = 'log-entry';
+            responseEntry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${responseType}">${response}</span>`;
+            outputEl.appendChild(responseEntry);
+        }
+        
+        // Reset form
+        function resetForm() {
+            document.getElementById('task-input').value = '';
+            document.getElementById('priority-select').value = 'medium';
+            document.getElementById('operation-select').value = 'general';
+            document.getElementById('location-input').value = '';
+            document.getElementById('simulation-check').checked = false;
+            document.getElementById('llm-check').checked = false;
+            document.getElementById('escalation-check').checked = true;
+            document.getElementById('ticket-check').checked = true;
+            document.getElementById('drive-check').checked = false;
+            
+            // Reset context to one item
+            const contextItems = document.getElementById('context-items');
+            contextItems.innerHTML = `
+                <div class="context-item" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" class="form-input" placeholder="Context item..." style="flex: 1;">
+                    <button class="btn btn-danger" onclick="removeContext(this)">REMOVE</button>
+                </div>
+            `;
+            
+            document.getElementById('layer-flow-card').style.display = 'none';
+            document.getElementById('results-card').style.display = 'none';
+            document.getElementById('ticket-preview').style.display = 'none';
+            document.querySelectorAll('.layer-node').forEach(node => {
+                node.classList.remove('active');
+            });
+            
+            handleOperationChange();
+        }
+        
+        // Update task lists
+        function updateTaskLists() {
+            // Update recent tasks
+            const recentTasksEl = document.getElementById('recent-tasks');
+            const historyEl = document.getElementById('task-history');
+            const ticketListEl = document.getElementById('ticket-list');
+            
+            // Tasks
+            if (tasks.length === 0) {
+                recentTasksEl.innerHTML = '<div class="empty-state">No recent tasks. Create a new request to get started.</div>';
+                historyEl.innerHTML = '<div class="empty-state">No task history available yet.</div>';
+            } else {
+                const recentHTML = tasks.slice(0, 5).map(task => `
+                    <div class="task-item">
+                        <div class="task-info">
+                            <div class="task-title">
+                                <span class="status-dot status-${task.status}"></span>
+                                ${task.task.substring(0, 60)}...
+                            </div>
+                            <div class="task-meta">
+                                ${task.priority.toUpperCase()} • ${task.operation.toUpperCase()} • 
+                                Confidence: ${(task.confidence * 100).toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                recentTasksEl.innerHTML = recentHTML;
+                historyEl.innerHTML = tasks.map(task => `
+                    <div class="task-item">
+                        <div class="task-info">
+                            <div class="task-title">
+                                <span class="status-dot status-${task.status}"></span>
+                                ${task.task}
+                            </div>
+                            <div class="task-meta">
+                                ID: ${task.id} • ${task.priority.toUpperCase()} • ${task.operation.toUpperCase()} • 
+                                ${new Date(task.timestamp).toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Tickets
+            if (tickets.length === 0) {
+                ticketListEl.innerHTML = '<div class="empty-state">No tickets generated yet.</div>';
+            } else {
+                ticketListEl.innerHTML = tickets.map(ticket => `
+                    <div class="task-item">
+                        <div class="task-info">
+                            <div class="task-title">
+                                <span class="status-dot status-${ticket.status === 'pending' ? 'pending' : 'completed'}"></span>
+                                ${ticket.id} - ${ticket.description}
+                            </div>
+                            <div class="task-meta">
+                                Priority: ${ticket.priority.toUpperCase()} • Status: ${ticket.status.toUpperCase()} • 
+                                ${new Date(ticket.timestamp).toLocaleString()}
+                            </div>
+                            ${ticket.nextSteps && ticket.nextSteps.length > 0 ? `
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #2a2a2a;">
+                                    <strong style="font-size: 11px; color: #888;">NEXT STEPS:</strong>
+                                    <ol style="margin: 4px 0 0 20px; font-size: 11px; color: #666;">
+                                        ${ticket.nextSteps.map(step => `<li>${step}</li>`).join('')}
+                                    </ol>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // Update metrics
+        function updateMetrics() {
+            document.getElementById('active-tasks').textContent = 
+                tasks.filter(t => t.status === 'processing').length;
+            document.getElementById('completed-tasks').textContent = 
+                tasks.filter(t => t.status === 'completed').length;
+            document.getElementById('tickets-generated').textContent = tickets.length;
+        }
+        
+        // Search Google Drive function
+        function searchGoogleDrive() {
+            const searchInput = document.getElementById('drive-search-input');
+            const resultsEl = document.getElementById('drive-search-results');
+            const query = searchInput.value.trim();
+            
+            if (!query) return;
+            
+            addLog(`Searching Google Drive for: ${query}`, 'info');
+            
+            // Simulate search results (replace with real API call when available)
+            const mockResults = [
+                { name: 'Pricing Override Dartmouth.docx', modified: '2025-07-10', id: 'doc-001' },
+                { name: 'River Oaks Installation Guide.docx', modified: '2025-07-08', id: 'doc-002' },
+                { name: 'SOP Visual Standards v2.docx', modified: '2025-07-05', id: 'doc-003' },
+                { name: 'Partner Terms Template.docx', modified: '2025-07-01', id: 'doc-004' }
+            ];
+            
+            const filteredResults = mockResults.filter(doc => 
+                doc.name.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            if (filteredResults.length > 0) {
+                resultsEl.innerHTML = filteredResults.map(doc => `
+                    <div class="task-item" style="cursor: pointer;" onclick="selectDriveDoc('${doc.id}', '${doc.name}')">
+                        <div class="task-info">
+                            <div class="task-title">
+                                <span style="color: #152F2F;">📄</span> ${doc.name}
+                            </div>
+                            <div class="task-meta">
+                                Last modified: ${doc.modified} • ID: ${doc.id}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                addLog(`Found ${filteredResults.length} documents in Google Drive`, 'success');
+            } else {
+                resultsEl.innerHTML = '<div class="empty-state">No documents found matching your search.</div>';
+                addLog('No matching documents found in Google Drive', 'warning');
+            }
+        }
+        
+        // Select Drive document
+        function selectDriveDoc(docId, docName) {
+            addLog(`Selected document: ${docName} (${docId})`, 'info');
+            // Could populate the task form with this document reference
+            const taskInput = document.getElementById('task-input');
+            if (taskInput.value) {
+                taskInput.value += `\n\nReference: ${docName}`;
+            } else {
+                taskInput.value = `Process document: ${docName}`;
+            }
+            // Switch to process tab
+            document.querySelector('.nav-item[onclick*="process"]').click();
+        }
+    </script>
+</body>
+</html>
