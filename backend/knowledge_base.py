@@ -60,7 +60,7 @@ CLUBHOUSE_KNOWLEDGE = {
                 "1. Check scope (partial or full outage)",
                 "2. Main breaker: Behind Bay 3 (gray panel)",
                 "3. Emergency lights should activate",
-                "4. Call Mike: 281-XXX-XXXX"
+                "4. Call Mike: 902-478-3209"
             ],
             "time": "Immediate",
             "contact": "Mike first, then Building Mgmt"
