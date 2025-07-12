@@ -9,7 +9,7 @@ CLUBHOUSE_KNOWLEDGE = {
                 "5. If not resolved, swap with unit from Bay 7"
             ],
             "time": "5-10 minutes",
-            "contact": "Jason: 281-XXX-XXXX"
+            "contact": "Jason: 902-393-1507"
         },
         
         "projector_no_image": {
