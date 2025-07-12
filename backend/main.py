@@ -189,3 +189,177 @@ if __name__ == "__main__":
         reload=True,
         log_level="info"
     )
+# Add these endpoints to your main.py after the existing ones
+
+from ticket_system import TicketEngine
+
+# Initialize ticket engine
+ticket_engine = TicketEngine()
+
+@app.post("/tickets")
+async def create_ticket(ticket_request: dict):
+    """Create a new ticket"""
+    try:
+        ticket = ticket_engine.create_ticket(
+            ticket_request.get('task_result', {}), 
+            ticket_request.get('form_data', {})
+        )
+        
+        return {
+            "status": "success",
+            "ticket": {
+                "id": ticket["id"],
+                "assigned_to": ticket["assigned_to"],
+                "category": ticket["category"],
+                "priority": ticket["priority"]
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create ticket: {str(e)}")
+
+@app.get("/tickets")
+async def get_tickets():
+    """Get all tickets"""
+    try:
+        tickets = ticket_engine.get_all_tickets()
+        return {"tickets": tickets}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get tickets: {str(e)}")
+
+@app.post("/tickets/{ticket_id}/toggle")
+async def toggle_ticket_status(ticket_id: str):
+    """Toggle ticket status between active and inactive"""
+    try:
+        success = ticket_engine.toggle_ticket_status(ticket_id)
+        
+        if success:
+            return {"status": "success", "message": f"Ticket {ticket_id} status toggled"}
+        else:
+            raise HTTPException(status_code=404, detail="Ticket not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to toggle ticket: {str(e)}")
+
+@app.get("/system/status")
+async def system_status():
+    """Get comprehensive system status"""
+    db = SessionLocal()
+    try:
+        # Count various entities
+        equipment_count = db.query(Equipment).count()
+        active_incidents = db.query(IncidentLog).filter(IncidentLog.status == 'open').count()
+        active_tickets = len([t for t in ticket_engine.get_all_tickets() if t['status'] == 'active'])
+        
+        # Get equipment status breakdown
+        equipment_status = {}
+        equipment_list = db.query(Equipment).all()
+        for eq in equipment_list:
+            status = eq.status
+            equipment_status[status] = equipment_status.get(status, 0) + 1
+        
+        return {
+            "status": "operational",
+            "timestamp": datetime.now(),
+            "metrics": {
+                "total_equipment": equipment_count,
+                "active_incidents": active_incidents,
+                "active_tickets": active_tickets,
+                "equipment_status": equipment_status
+            },
+            "layers": {
+                "capability_frontier": "active",
+                "clubops": "active", 
+                "signalos": "active",
+                "clubhost": "active",
+                "ticket_engine": "active" if TicketEngine else "disabled"
+            }
+        }
+    finally:
+        db.close()
+
+@app.get("/equipment")
+async def list_all_equipment():
+    """Get all equipment with status"""
+    db = SessionLocal()
+    try:
+        equipment = db.query(Equipment).all()
+        
+        return {
+            "equipment": [
+                {
+                    "id": e.id,
+                    "location": e.location,
+                    "bay": e.bay_number,
+                    "type": e.equipment_type,
+                    "model": e.model,
+                    "status": e.status,
+                    "last_maintenance": e.last_maintenance.isoformat() if e.last_maintenance else None,
+                    "usage_hours": e.usage_hours or 0
+                } for e in equipment
+            ],
+            "count": len(equipment)
+        }
+    finally:
+        db.close()
+
+@app.post("/equipment/{equipment_id}/status")
+async def update_equipment_status(equipment_id: int, status_data: dict):
+    """Update equipment status"""
+    db = SessionLocal()
+    try:
+        equipment = db.query(Equipment).filter(Equipment.id == equipment_id).first()
+        if not equipment:
+            raise HTTPException(status_code=404, detail="Equipment not found")
+        
+        equipment.status = status_data.get('status', equipment.status)
+        if 'usage_hours' in status_data:
+            equipment.usage_hours = status_data['usage_hours']
+        
+        equipment.updated_at = datetime.utcnow()
+        db.commit()
+        
+        return {
+            "status": "success",
+            "equipment_id": equipment_id,
+            "new_status": equipment.status
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+@app.get("/analytics/summary")
+async def analytics_summary():
+    """Get analytics summary for dashboard"""
+    db = SessionLocal()
+    try:
+        # Get counts
+        total_incidents = db.query(IncidentLog).count()
+        open_incidents = db.query(IncidentLog).filter(IncidentLog.status == 'open').count()
+        resolved_incidents = db.query(IncidentLog).filter(IncidentLog.status == 'resolved').count()
+        
+        # Get recent activity
+        recent_incidents = db.query(IncidentLog).order_by(
+            IncidentLog.timestamp.desc()
+        ).limit(10).all()
+        
+        return {
+            "summary": {
+                "total_incidents": total_incidents,
+                "open_incidents": open_incidents,
+                "resolved_incidents": resolved_incidents,
+                "resolution_rate": round(resolved_incidents / max(total_incidents, 1) * 100, 1)
+            },
+            "recent_activity": [
+                {
+                    "id": i.id,
+                    "description": i.issue_description[:100] + "..." if len(i.issue_description) > 100 else i.issue_description,
+                    "category": i.issue_category,
+                    "priority": i.priority,
+                    "status": i.status,
+                    "timestamp": i.timestamp.isoformat()
+                } for i in recent_incidents
+            ]
+        }
+    finally:
+        db.close()
