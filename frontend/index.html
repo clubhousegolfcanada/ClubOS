@@ -3,11 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClubOS Control Panel</title>
+    <title>ClubOS Mission Control</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Core Variables */
+        /* Theme Variables */
         :root {
+            --font-primary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --transition-fast: 0.2s;
+            --transition-normal: 0.3s;
+            --grid-gap: 16px;
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --status-success: #10b981;
+            --status-error: #ef4444;
+            --status-warning: #f59e0b;
+            --status-info: #3b82f6;
+        }
+
+        /* Dark Theme Variables */
+        :root[data-theme="dark"] {
             --bg-primary: #0a0a0a;
             --bg-secondary: #1a1a1a;
             --bg-tertiary: #2a2a2a;
@@ -18,17 +33,20 @@
             --text-muted: #666666;
             --border-primary: #333333;
             --border-secondary: #2a2a2a;
-            --status-success: #10b981;
-            --status-error: #ef4444;
-            --status-warning: #f59e0b;
-            --status-info: #3b82f6;
-            --font-primary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --transition-fast: 0.2s;
-            --transition-normal: 0.3s;
-            --grid-gap: 16px;
-            --radius-sm: 4px;
-            --radius-md: 8px;
-            --radius-lg: 12px;
+        }
+
+        /* Light Theme Variables */
+        :root[data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #e2e8f0;
+            --accent: #047857;
+            --accent-hover: #065f46;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --border-primary: #e5e7eb;
+            --border-secondary: #f3f4f6;
         }
 
         /* Reset & Base */
@@ -212,6 +230,31 @@
         .btn-sm {
             padding: 0.5rem 1rem;
             font-size: 0.75rem;
+        }
+
+        /* Theme Toggle - Minimal */
+        #theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-secondary);
+            color: var(--text-secondary);
+            border-radius: var(--radius-md);
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 500;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #theme-toggle:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
         }
 
         /* Navigation */
@@ -471,7 +514,7 @@
         .api-status {
             position: fixed;
             top: 1.5rem;
-            right: 1.5rem;
+            right: 5rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -519,6 +562,11 @@
             
             .api-status {
                 top: 0.5rem;
+                right: 4rem;
+            }
+
+            #theme-toggle {
+                top: 0.5rem;
                 right: 0.5rem;
             }
             
@@ -550,14 +598,18 @@
             
             .nav,
             .api-status,
-            .btn {
+            .btn,
+            #theme-toggle {
                 display: none;
             }
         }
     </style>
 </head>
-<body class="role-admin">
+<body class="role-admin" data-theme="dark">
     <div class="container">
+        <!-- Minimal Theme Toggle -->
+        <button id="theme-toggle">DARK</button>
+
         <!-- API Status Indicator -->
         <div class="api-status disconnected" id="apiStatus">
             <span class="status-dot status-failed"></span>
@@ -695,19 +747,19 @@
         class ArchitectureComponent extends Component {
             render() {
                 const modules = [
-                    { name: 'ClubOS', desc: 'Master system & UI interface' },
-                    { name: 'ClubCore', desc: 'Backend engine - Routing logic' },
-                    { name: 'ClubOps', desc: 'Procedural logic - Routine tasks' },
-                    { name: 'SignalOS', desc: 'Strategic engine - Planning' },
+                    { name: 'ClubOS', desc: 'Master system & UI interface - The full nervous system' },
+                    { name: 'ClubCore', desc: 'Backend engine - Central brain routing logic' },
+                    { name: 'ClubOps', desc: 'Procedural logic - Muscle memory for routine tasks' },
+                    { name: 'SignalOS', desc: 'Strategic engine - Prefrontal cortex for planning' },
                     { name: 'Clubhost', desc: 'Voice enforcement - Personality filter' },
-                    { name: 'CapabilityFrontier', desc: 'Guardrail layer' },
+                    { name: 'CapabilityFrontier', desc: 'Guardrail layer - Pain reflex for boundaries' },
                     { name: 'Ticket Engine', desc: 'Post-processing - Reflex output & logging' },
                     { name: 'Google Drive', desc: 'Document search & retrieval integration' }
                 ];
 
                 this.element.innerHTML = `
                     <div class="card" style="margin-bottom: 2rem;">
-                        <div class="card-header text-accent">SYSTEM ARCHITECTURE</div>
+                        <div class="card-header text-accent">SYSTEM ARCHITECTURE - NERVOUS SYSTEM ANALOGY</div>
                         <div class="grid grid-auto">
                             ${modules.map(module => `
                                 <div class="card card-hover" style="background: var(--bg-primary);">
@@ -1211,6 +1263,23 @@
         document.addEventListener('DOMContentLoaded', () => {
             new ClubOSApp();
         });
+
+        // Minimal Theme Toggle - Just 8 lines!
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const root = document.documentElement;
+            const current = root.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', next);
+            document.getElementById('theme-toggle').textContent = next.toUpperCase();
+            localStorage.setItem('clubos-theme', next);
+        });
+
+        // Load saved theme on startup
+        (function() {
+            const saved = localStorage.getItem('clubos-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+            document.getElementById('theme-toggle').textContent = saved.toUpperCase();
+        })();
     </script>
 </body>
 </html>
